@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+
 from dataclasses import dataclass
 from datasets import load_dataset
 from torchvision import transforms
@@ -171,7 +172,7 @@ def train_loop(config, medel, noise_scheduler, optimizer, train_dataloader, lr_s
                 
                 # 각 epoch가 끝난 후 evaluate()와 몇가지 데모 이미지를 선택적으로 샘플링하고 모델 저장
             if accelerator.is_main_process:
-                pipline = DDPMPipeline(unet=accelerator.unwrap_model(model), scheduler=noise_scheduler)
+                pipeline = DDPMPipeline(unet=accelerator.unwrap_model(model), scheduler=noise_scheduler)
                 if (epoch + 1) % config.save_image_epochs == 0 or epoch == config.num_epochs -1:
                     evaluate(config, epoch, pipeline)
                 if (epoch + 1) % config.save_image_epochs == 0 or epoch == config.num_epochs -1:
