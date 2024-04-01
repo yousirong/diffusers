@@ -13,9 +13,9 @@ RUN apt update && \
     ca-certificates \
     libsndfile1-dev \
     libgl1 \
-    python3.8 \
+    python3.10 \
     python3-pip \
-    python3.8-venv && \
+    python3.10-venv && \
     rm -rf /var/lib/apt/lists
 
 # make sure to use venv
@@ -42,5 +42,16 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip uv==0.1.11 && \
     transformers \
     pytorch-lightning
 
+# Set environment variable
+ENV CUBLAS_WORKSPACE_CONFIG=:16:8
 
-CMD ["/bin/bash"]
+RUN git clone https://github.com/yousirong/diffusers.git /app
+
+WORKDIR /app
+
+CMD ["bin/bash"]
+
+# sudo docker build -t diff_tuto docker/diffusers-pytorch-cuda
+# sudo docker run --gpus all -it --rm diff_tuto bash
+
+# pip install .
