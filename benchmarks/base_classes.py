@@ -1,8 +1,9 @@
+
 import os
 import sys
 
 import torch
-
+# diffusers 모듈에서 필요한 클래스들을 임포트합니다.
 from diffusers import (
     AutoPipelineForImage2Image,
     AutoPipelineForInpainting,
@@ -18,9 +19,9 @@ from diffusers import (
 )
 from diffusers.utils import load_image
 
-
+# 현재 디렉토리를 시스템 경로에 추가합니다.
 sys.path.append(".")
-
+# utils 모듈에서 필요한 함수와 변수들을 임포트합니다.
 from utils import (  # noqa: E402
     BASE_PATH,
     PROMPT,
@@ -32,7 +33,7 @@ from utils import (  # noqa: E402
     write_to_csv,
 )
 
-
+# 각 모델에 대한 해상도를 매핑합니다.
 RESOLUTION_MAPPING = {
     "runwayml/stable-diffusion-v1-5": (512, 512),
     "lllyasviel/sd-controlnet-canny": (512, 512),

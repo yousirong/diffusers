@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.0-runtime-ubuntu20.04
+FROM nvidia/cuda:12.3.2-runtime-ubuntu22.04 as base
 LABEL maintainer="Hugging Face"
 LABEL repository="diffusers"
 
@@ -41,5 +41,6 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip uv==0.1.11 && \
     tensorboard \
     transformers \
     pytorch-lightning
+
 
 CMD ["/bin/bash"]
