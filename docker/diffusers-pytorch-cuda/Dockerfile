@@ -46,7 +46,8 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip uv==0.1.11 && \
 ENV CUBLAS_WORKSPACE_CONFIG=:16:8
 
 RUN git clone https://github.com/yousirong/diffusers.git /app
-RUN git config --gloabal credential.helper store
+# RUN git config --gloabal credential.helper store
+
 
 WORKDIR /app
 
@@ -56,3 +57,4 @@ CMD ["bin/bash"]
 # sudo docker run --gpus all -it --rm diff_tuto bash
 
 # pip install -e ".[torch]"
+# pip install -e .
