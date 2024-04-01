@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 from accelerate import notebook_launcher
 from dataclasses import dataclass
 from datasets import load_dataset
