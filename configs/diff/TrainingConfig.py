@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datasets import load_dataset
 from torchvision import transforms
 import torch
-from huggingface_hub import notebook_login
+# from huggingface_hub import notebook_login
 import torch
 from PIL import Image
 from diffusers import DDPMScheduler
@@ -22,7 +22,8 @@ from pathlib import Path
 import os
 from accelerate import notebook_launcher
 import glob
-notebook_login()
+
+# notebook_login()
 
 @dataclass
 class TrainingConfig:
