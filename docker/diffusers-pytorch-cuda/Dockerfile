@@ -40,7 +40,8 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip uv==0.1.11 && \
     scipy \
     tensorboard \
     transformers \
-    pytorch-lightning
+    pytorch-lightning \
+    matplotlib
 
 # Copy requirements.txt and install dependencies
 COPY requirements.txt requirements.txt
