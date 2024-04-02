@@ -176,3 +176,6 @@ tags
 
 # wandb
 wandb
+
+# ddpm-butterflies-128 
+docker/diffusers-pytorch-cuda/ddpm-butterflies-128

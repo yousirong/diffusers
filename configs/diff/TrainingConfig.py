@@ -177,10 +177,8 @@ def train_loop(config, medel, noise_scheduler, optimizer, train_dataloader, lr_s
                 else:
                     pipeline.save_pretrained(config.output_dir)
 
-
 args = (config, model, noise_scheduler, optimizer, train_dataloader, lr_scheduler)
 notebook_launcher(train_loop, args=args, num_processes=1)
-
 
 sample_images = sorted(glob.glob(f"{config.output_dir}/samples/*.png"))
 Image.open(sample_images[-1])

@@ -56,8 +56,8 @@ RUN git clone https://github.com/yousirong/diffusers.git /app
 
 
 WORKDIR /app
-
-COPY /home/juneyonglee/Desktop/ddpm-butterflies-128 /app
+RUN mkdir -p /app/ddpm-butterflies-128 
+COPY ./ddpm-butterflies-128 /app/ddpm-butterflies-128 
 
 CMD ["bin/bash"]
 
