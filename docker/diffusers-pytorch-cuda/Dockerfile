@@ -42,6 +42,11 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip uv==0.1.11 && \
     transformers \
     pytorch-lightning
 
+# Copy requirements.txt and install dependencies
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+
 # Set environment variable
 ENV CUBLAS_WORKSPACE_CONFIG=:16:8
 
@@ -49,12 +54,20 @@ RUN git clone https://github.com/yousirong/diffusers.git /app
 # RUN git config --gloabal credential.helper store
 
 
+
 WORKDIR /app
+
+COPY /home/juneyonglee/Desktop/ddpm-butterflies-128 /app
 
 CMD ["bin/bash"]
 
 # sudo docker build -t diff_tuto docker/diffusers-pytorch-cuda
 # sudo docker run --gpus all -it --rm diff_tuto bash
 
-# pip install -e ".[torch]"
 # pip install -e .
+
+# huggingface-cli login
+
+# python examples/unconditional_image_generation/train_unconditional.py --dataset_name huggan/smithsonian_butterflies_subset --train_batch_size 8 --num_epochs 50 --output_dir ddpm-butterflies-128 --push_to_hub --logger tensorboard --logging_dir /app/workdir/logs
+# sudo docker cp d037b872f18e:/app/ddpm-butterflies-128 /home/juneyonglee/Desktop
+
