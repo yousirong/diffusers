@@ -62,6 +62,10 @@ COPY ./ddpm-butterflies-128 /app/ddpm-butterflies-128
 CMD ["bin/bash"]
 
 # sudo docker build -t diff_tuto docker/diffusers-pytorch-cuda
+
+# new build images
+# sudo docker build --no-cache -t diff_tuto docker/diffusers-pytorch-cuda
+
 # sudo docker run --gpus all -it --rm diff_tuto bash
 
 # pip install -e .
