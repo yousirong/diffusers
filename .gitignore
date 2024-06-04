@@ -177,5 +177,8 @@ tags
 # wandb
 wandb
 
-# ddpm-butterflies-128 
+# ddpm-butterflies-128
 docker/diffusers-pytorch-cuda/ddpm-butterflies-128
+
+# sd-pokemon-model
+examples/text_to_image/sd-pokemon-model
