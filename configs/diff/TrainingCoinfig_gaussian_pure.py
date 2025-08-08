@@ -3,7 +3,7 @@ import re
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
-from PIL import Image, ImageEnhance
+from PIL import Image
 import numpy as np
 from diffusers import UNet2DModel, DDPMScheduler
 from tqdm import tqdm
@@ -17,121 +17,45 @@ def get_version(filename: str) -> str:
     match = re.search(r'V[3-7]', filename)
     return match.group(0) if match else "Unknown"
 
-def apply_augmentation(img, apply_aug=True):
-    """이미지 증강 적용"""
-    if not apply_aug:
-        return img
-
-    # 랜덤하게 증강 기법 선택
-    augmentations = []
-
-    # 회전 (±15도)
-    if random.random() < 0.5:
-        angle = random.uniform(-15, 15)
-        img = img.rotate(angle, fillcolor=0)
-
-    # 수평 뒤집기
-    if random.random() < 0.5:
-        img = img.transpose(Image.FLIP_LEFT_RIGHT)
-
-    # 수직 뒤집기
-    if random.random() < 0.3:
-        img = img.transpose(Image.FLIP_TOP_BOTTOM)
-
-    # 밝기 조정 (0.8~1.2)
-    if random.random() < 0.4:
-        enhancer = ImageEnhance.Brightness(img)
-        img = enhancer.enhance(random.uniform(0.8, 1.2))
-
-    # 대비 조정 (0.8~1.2)
-    if random.random() < 0.4:
-        enhancer = ImageEnhance.Contrast(img)
-        img = enhancer.enhance(random.uniform(0.8, 1.2))
-
-    # 채도 조정 (0.7~1.3) - 그레이스케일이지만 변환 후 적용
-    if random.random() < 0.3:
-        # 임시로 RGB로 변환하여 채도 적용 후 다시 그레이스케일
-        img_rgb = img.convert('RGB')
-        enhancer = ImageEnhance.Color(img_rgb)
-        img_rgb = enhancer.enhance(random.uniform(0.7, 1.3))
-        img = img_rgb.convert('L')
-
-    # 선명도 조정 (0.8~1.3)
-    if random.random() < 0.4:
-        enhancer = ImageEnhance.Sharpness(img)
-        img = enhancer.enhance(random.uniform(0.8, 1.3))
-
-    return img
-
-def generate_gaussian_noise_pair(img_path, image_size=512, augment=True, noise_level_range=(0.1, 0.5)):
+# 완전한 가우시안 노이즈 생성 (클리핑 없음)
+def generate_gaussian_noise_pair(img_path, image_size=512, noise_std=0.1):
     img = Image.open(img_path).convert('L').resize((image_size, image_size))
-
-    # 데이터 증강 적용
-    if augment:
-        img = apply_augmentation(img)
-
     img_array = np.array(img) / 255.0
-    h, w = img_array.shape
 
-    # 동적 노이즈 레벨 (훈련을 더 robust하게)
-    noise_level = random.uniform(*noise_level_range) if augment else 0.3
-    noise = np.random.normal(0, noise_level, size=(h, w))
+    # 표준 가우시안 노이즈 (클리핑 없음)
+    noise = np.random.normal(0, noise_std, size=img_array.shape)
     noisy_img = img_array + noise
-    noisy_img = np.clip(noisy_img, 0, 1)
 
     return noisy_img.astype(np.float32), img_array.astype(np.float32)
 
 class GaussianNoiseDataset(Dataset):
-    def __init__(self, image_dir, image_size=512, augment=True, augment_prob=0.8):
+    def __init__(self, image_dir, image_size=512, noise_std=0.1):
         self.image_dir = image_dir
         self.image_files = sorted(os.listdir(image_dir))
         self.image_size = image_size
-        self.augment = augment
-        self.augment_prob = augment_prob
-
-        # 증강을 위한 추가 Transform
-        self.tensor_transform = transforms.Compose([
-            transforms.RandomApply([
-                transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.0))
-            ], p=0.2),
-        ])
+        self.noise_std = noise_std
 
     def __len__(self):
-        # 증강 시 데이터셋 크기를 2배로 증가
-        return len(self.image_files) * (2 if self.augment else 1)
+        return len(self.image_files)
 
     def __getitem__(self, idx):
-        # 원본 인덱스 계산
-        original_idx = idx % len(self.image_files)
-        apply_aug = self.augment and (idx >= len(self.image_files) or random.random() < self.augment_prob)
+        path = os.path.join(self.image_dir, self.image_files[idx])
 
-        path = os.path.join(self.image_dir, self.image_files[original_idx])
-
-        # 노이즈 레벨을 다양화
-        noise_range = (0.1, 0.5) if apply_aug else (0.25, 0.35)
+        # 완전한 가우시안 노이즈 생성
         noisy_img, clean_img = generate_gaussian_noise_pair(
-            path, self.image_size, augment=apply_aug, noise_level_range=noise_range
+            path, self.image_size, noise_std=self.noise_std
         )
 
-        # 정규화: [0,1] -> [-1,1]
+        # 정규화: [0,1] -> [-1,1] (클리핑 없이)
         noisy_tensor = torch.tensor(noisy_img * 2.0 - 1.0, dtype=torch.float32).unsqueeze(0).repeat(3, 1, 1)
         clean_tensor = torch.tensor(clean_img * 2.0 - 1.0, dtype=torch.float32).unsqueeze(0).repeat(3, 1, 1)
 
-        # 텐서 레벨 증강 적용
-        if apply_aug and random.random() < 0.3:
-            # 동일한 변환을 noisy와 clean에 적용
-            seed = torch.randint(0, 2**32, (1,)).item()
-            torch.manual_seed(seed)
-            noisy_tensor = self.tensor_transform(noisy_tensor)
-            torch.manual_seed(seed)
-            clean_tensor = self.tensor_transform(clean_tensor)
-
-        version = get_version(self.image_files[original_idx])
+        version = get_version(self.image_files[idx])
         return noisy_tensor, clean_tensor, version
 
 # 설정
 image_dir = "data/train_gt"
-output_dir = "ddpm_checkpoints_aug_1.0"
+output_dir = "ddpm_checkpoints_gaussian_pure"
 os.makedirs(output_dir, exist_ok=True)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -139,6 +63,7 @@ epochs = 100
 batch_size = 1
 lr = 1e-4
 image_size = 512
+noise_std = 0.1  # 가우시안 노이즈 표준편차
 
 print(f"Using device: {device}")
 print(f"Available GPU memory: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f}GB" if torch.cuda.is_available() else "CPU mode")
@@ -155,13 +80,10 @@ model = UNet2DModel(
     attention_head_dim=8,
 ).to(device)
 
-# DDPM 스케줄러
+# 표준 DDPM 스케줄러
 noise_scheduler = DDPMScheduler(
-    # num_train_timesteps=100,
-    # beta_schedule="linear",
-    # prediction_type="epsilon"
-    num_train_timesteps=1000,  # 일반적으로 1000 사용
-    beta_schedule="scaled_linear",  # 또는 "cosine"
+    num_train_timesteps=1000,
+    beta_schedule="scaled_linear",
     prediction_type="epsilon"
 )
 
@@ -171,8 +93,8 @@ scheduler = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=lr/10)
 # Mixed precision을 위한 scaler
 scaler = GradScaler()
 
-# 증강된 데이터 로딩
-dataset = GaussianNoiseDataset(image_dir, image_size, augment=True, augment_prob=0.8)
+# 순수 가우시안 데이터 로딩 (증강 없음)
+dataset = GaussianNoiseDataset(image_dir, image_size, noise_std=noise_std)
 dataloader = DataLoader(
     dataset,
     batch_size=batch_size,
@@ -183,11 +105,11 @@ dataloader = DataLoader(
     drop_last=True
 )
 
-print(f"Dataset size (with augmentation): {len(dataset)}")
-print(f"Original images: {len(dataset.image_files)}")
+print(f"Dataset size: {len(dataset)}")
 print(f"Batches per epoch: {len(dataloader)}")
+print(f"Gaussian noise std: {noise_std}")
 
-# 버전별 분포 확인 (원본 기준)
+# 버전별 분포 확인
 version_counts = {}
 for file in dataset.image_files:
     version = get_version(file)
@@ -259,9 +181,8 @@ for epoch in range(epochs):
         with torch.no_grad():
             print("Testing denoising...")
 
-            # 원본 이미지로 테스트 (증강 없이)
-            test_dataset = GaussianNoiseDataset(image_dir, image_size, augment=False)
-            test_noisy, test_clean, test_version = test_dataset[0]
+            # 테스트용 데이터
+            test_noisy, test_clean, test_version = dataset[0]
             test_noisy = test_noisy.unsqueeze(0).to(device)
 
             # DDPM 디노이징
@@ -291,7 +212,8 @@ for epoch in range(epochs):
                 'scheduler_state_dict': scheduler.state_dict(),
                 'loss': avg_loss,
                 'version_losses': version_losses,
-            }, os.path.join(output_dir, f"best_model_augmented.pt"))
+                'noise_std': noise_std,
+            }, os.path.join(output_dir, f"best_model_gaussian.pt"))
             print(f"💾 Best model saved! Loss: {avg_loss:.6f}")
 
         torch.save({
@@ -301,7 +223,8 @@ for epoch in range(epochs):
             'scheduler_state_dict': scheduler.state_dict(),
             'loss': avg_loss,
             'version_losses': version_losses,
-        }, os.path.join(output_dir, f"ddpm_epoch{epoch+1}_augmented.pt"))
+            'noise_std': noise_std,
+        }, os.path.join(output_dir, f"ddpm_epoch{epoch+1}_gaussian.pt"))
 
     # 메모리 정리
     gc.collect()
@@ -313,5 +236,6 @@ print(f"Models saved in: {output_dir}")
 
 # 최종 통계
 print("\n📊 Final statistics:")
-print(f"Total training samples (with augmentation): {len(dataset)}")
+print(f"Total training samples: {len(dataset)}")
+print(f"Gaussian noise std: {noise_std}")
 print(f"Original images by version: {version_counts}")

@@ -113,6 +113,7 @@ else:
             "UNetSpatioTemporalConditionModel",
             "UVit2DModel",
             "VQModel",
+            "DiTTransformer2DModelWithMobileViT",
         ]
     )
 
@@ -145,6 +146,7 @@ else:
             "RePaintPipeline",
             "ScoreSdeVePipeline",
             "StableDiffusionMixin",
+            "DiTPipelineWithMobileViT",
         ]
     )
     _import_structure["schedulers"].extend(
@@ -548,6 +550,7 @@ if TYPE_CHECKING or DIFFUSERS_SLOW_IMPORT:
             UNetSpatioTemporalConditionModel,
             UVit2DModel,
             VQModel,
+            DiTTransformer2DModelWithMobileViT,
         )
         from .optimization import (
             get_constant_schedule,
@@ -580,6 +583,7 @@ if TYPE_CHECKING or DIFFUSERS_SLOW_IMPORT:
             RePaintPipeline,
             ScoreSdeVePipeline,
             StableDiffusionMixin,
+            DiTPipelineWithMobileViT,
         )
         from .schedulers import (
             AmusedScheduler,

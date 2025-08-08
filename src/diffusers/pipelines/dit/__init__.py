@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING
 from ...utils import DIFFUSERS_SLOW_IMPORT, _LazyModule
 
 
-_import_structure = {"pipeline_dit": ["DiTPipeline"]}
+_import_structure = {"pipeline_dit": ["DiTPipeline","DiTPipelineWithMobileViT"]}
 
 if TYPE_CHECKING or DIFFUSERS_SLOW_IMPORT:
     from .pipeline_dit import DiTPipeline
+    from .DiTPipelineWithMobileViT import DiTPipelineWithMobileViT
 
 else:
     import sys

@@ -182,3 +182,12 @@ docker/diffusers-pytorch-cuda/ddpm-butterflies-128
 
 # sd-pokemon-model
 examples/text_to_image/sd-pokemon-model
+ddpm_checkpoints
+ddpm_checkpoints_circlecrop
+inference_results
+ultrasound
+ddpm_checkpoints_augmented
+ddpm_checkpoints_no_aug
+inference_results_no_aug
+inference_results_augmented
+ddpm_checkpoints_gaussian_pure
