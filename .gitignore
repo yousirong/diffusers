@@ -181,15 +181,7 @@ wandb
 docker/diffusers-pytorch-cuda/ddpm-butterflies-128
 
 # sd-pokemon-model
-examples/text_to_image/sd-pokemon-model
-ddpm_checkpoints
-ddpm_checkpoints_circlecrop
-inference_results
+ddpm-ultrasound-512-a100
+inference_results_with_metrics
+examples/text_to_image
 ultrasound
-ddpm_checkpoints_augmented
-ddpm_checkpoints_no_aug
-inference_results_no_aug
-inference_results_augmented
-ddpm_checkpoints_gaussian_pure
-inference_results_CN_finalmixed
-ddpm_checkpoints_mixed_training
