@@ -176,3 +176,6 @@ tags
 
 # wandb
 wandb
+Dataset_BUSI_with_GT
+my_test_results
+ddpm-busi-512_default
