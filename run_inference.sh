@@ -39,7 +39,7 @@ python test_inference.py \
     --model_path "$MODEL_PATH" \
     --test_dir "$TEST_DIR" \
     --output_dir "$OUTPUT_DIR" \
-    --max_test_images 10 \
+    --max_test_images 20 \
     --num_generate 8 \
     --num_inference_steps 100 \
     --noise_strength 0.8 \
